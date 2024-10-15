@@ -220,10 +220,10 @@ get_character_composition_ids () {
     # Create an array with each of the available composition options
     local compositionOptions=()
     read -a compositionOptions <<< "$compositionString"
-    # Remove composition options with unrepresentable components, unencoded components, or not
-    # wished IDCs, i.e. composition options that have any of the follow characters: ？{}〾㇯⿾⿿
+    # Remove composition options with unrepresentable components or unwished IDCs,
+    # i.e. composition options that have any of the follow characters: ？〾㇯⿾⿿
     for idx in "${!compositionOptions[@]}"; do
-        if [[ -n $(echo "${compositionOptions[idx]}" | sed -n '/[？{}〾㇯⿾⿿]/p') ]]; then
+        if [[ -n $(echo "${compositionOptions[idx]}" | sed -n '/[？〾㇯⿾⿿]/p') ]]; then
             unset "compositionOptions[$idx]"
         fi
     done
