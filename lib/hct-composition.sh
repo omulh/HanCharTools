@@ -55,6 +55,7 @@ readonly IDS_FILE="$SOURCE_DIR/../IDS/IDS.TXT"
 
 QUIET=false
 USE_WIKTIONARY=false
+USE_UNENCODED_CHARS=false
 
 # Process the environment variables
 if [[ -n $HCT_SOURCE_LETTERS && -z $(echo "$HCT_SOURCE_LETTERS" | sed 's/[GHMTJKPVUSBXYZ]//g') ]]; then
@@ -189,15 +190,27 @@ get_character_composition_wikt () {
 
 decode_unencoded_components () {
     local compString="$1"
+    local USE_HAN_PUA="$2"
     local unencodedComponents
     unencodedComponents=$(echo "$compString" | sed 's/^[^}]*{/{/')
     unencodedComponents=$(echo "$unencodedComponents" | sed 's/}[^{]*{/} {/g')
     unencodedComponents=$(echo "$unencodedComponents" | sed 's/}[^{]*$/}/')
     for componentNumber in $unencodedComponents; do
+        local componentChar
         componentChar=$(grep -m1 "#.$componentNumber" "$IDS_FILE" | sed 's/.*\(.\)$/\1/')
-        compString=$(echo "$compString" | sed "s/$componentNumber/$componentChar/")
+        if [[ $USE_HAN_PUA == false ]]; then
+            local componentComposition
+            componentComposition=$(grep -P "\t$componentChar\t" "$IDS_FILE" | sed 's/.*^//; s/$.*//')
+            compString=$(echo "$compString" | sed "s/$componentNumber/$componentComposition/")
+        else
+            compString=$(echo "$compString" | sed "s/$componentNumber/$componentChar/")
+        fi
     done
-    echo "$compString"
+    if [[ $compString == *{*}* ]]; then
+        echo $(decode_unencoded_components "$compString" $USE_HAN_PUA)
+    else
+        echo "$compString"
+    fi
 }
 
 get_character_composition_ids () {
@@ -220,7 +233,7 @@ get_character_composition_ids () {
     # If there are unencoded components, i.e. {0-9} components, replace them with
     # their corresponding character (only valid with the BabelStone Han PUA font)
     if [[ $compositionString == *{*}* ]]; then
-        compositionString=$(decode_unencoded_components "$compositionString")
+        compositionString=$(decode_unencoded_components "$compositionString" $USE_UNENCODED_CHARS)
     fi
 
     # Create an array with each of the available composition options
