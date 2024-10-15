@@ -187,6 +187,19 @@ get_character_composition_wikt () {
     return 0
 }
 
+decode_unencoded_components () {
+    local compString="$1"
+    local unencodedComponents
+    unencodedComponents=$(echo "$compString" | sed 's/^[^}]*{/{/')
+    unencodedComponents=$(echo "$unencodedComponents" | sed 's/}[^{]*{/} {/g')
+    unencodedComponents=$(echo "$unencodedComponents" | sed 's/}[^{]*$/}/')
+    for componentNumber in $unencodedComponents; do
+        componentChar=$(grep -m1 "#.$componentNumber" "$IDS_FILE" | sed 's/.*\(.\)$/\1/')
+        compString=$(echo "$compString" | sed "s/$componentNumber/$componentChar/")
+    done
+    echo "$compString"
+}
+
 get_character_composition_ids () {
     local givenChar=$1
 
@@ -207,14 +220,7 @@ get_character_composition_ids () {
     # If there are unencoded components, i.e. {0-9} components, replace them with
     # their corresponding character (only valid with the BabelStone Han PUA font)
     if [[ $compositionString == *{*}* ]]; then
-        local unencodedComponents
-        unencodedComponents=$(echo "$compositionString" | sed 's/^[^}]*{/{/')
-        unencodedComponents=$(echo "$unencodedComponents" | sed 's/}[^{]*{/} {/g')
-        unencodedComponents=$(echo "$unencodedComponents" | sed 's/}[^{]*$/}/')
-        for componentNumber in $unencodedComponents; do
-            componentChar=$(grep -m1 "#.$componentNumber" "$IDS_FILE" | sed 's/.*\(.\)$/\1/')
-            compositionString=$(echo "$compositionString" | sed "s/$componentNumber/$componentChar/")
-        done
+        compositionString=$(decode_unencoded_components "$compositionString")
     fi
 
     # Create an array with each of the available composition options
