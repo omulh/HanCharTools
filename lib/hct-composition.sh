@@ -55,6 +55,7 @@ readonly IDS_FILE="$SOURCE_DIR/../IDS/IDS.TXT"
 
 QUIET=false
 USE_WIKTIONARY=false
+USE_UNENCODED_CHARS=false
 
 # Process the environment variables
 if [[ -n $HCT_SOURCE_LETTERS && -z $(echo "$HCT_SOURCE_LETTERS" | sed 's/[GHMTJKPVUSBXYZ]//g') ]]; then
@@ -62,7 +63,7 @@ if [[ -n $HCT_SOURCE_LETTERS && -z $(echo "$HCT_SOURCE_LETTERS" | sed 's/[GHMTJK
 fi
 
 # Parse the command line arguments
-GIVEN_ARGS=$(getopt -n hct-$progName -o qs:wVh -l "quiet,source:,wiktionary,version,help" -- "$@")
+GIVEN_ARGS=$(getopt -n hct-$progName -o qs:uwVh -l "quiet,source:,unencoded,wiktionary,version,help" -- "$@")
 
 # Deal with invalid command line arguments
 if [ $? != 0 ]; then
@@ -78,6 +79,8 @@ while true; do
             QUIET=true; shift ;;
         -s | --source )
             SOURCE_LETTERS="$2"; shift 2 ;;
+        -u | --unencoded )
+            USE_UNENCODED_CHARS=true; shift ;;
         -w | --wiktionary )
             USE_WIKTIONARY=true; shift ;;
         -V | --version )
@@ -187,6 +190,41 @@ get_character_composition_wikt () {
     return 0
 }
 
+decode_unencoded_components () {
+    local compString="$1"
+    local USE_HAN_PUA="$2"
+
+    # Extract the unencoded components,
+    # i.e. components represented by {0-9}
+    local unencodedComponents
+    unencodedComponents=$(echo "$compString" | sed 's/^[^}]*{/{/')
+    unencodedComponents=$(echo "$unencodedComponents" | sed 's/}[^{]*{/} {/g')
+    unencodedComponents=$(echo "$unencodedComponents" | sed 's/}[^{]*$/}/')
+
+    # For every extracted component
+    for componentNumber in $unencodedComponents; do
+        # Get the corresponding character
+        # (only valid when using the BabelStone Han PUA font)
+        local componentChar
+        componentChar=$(grep -m1 "#.$componentNumber" "$IDS_FILE" | sed 's/.*\(.\)$/\1/')
+        # Replace the component by its sub-composition or
+        # by its character, depending on the passed option
+        if [[ $USE_HAN_PUA == false ]]; then
+            local componentComposition
+            componentComposition=$(grep -P "\t$componentChar\t" "$IDS_FILE" | sed 's/.*^//; s/$.*//')
+            compString=$(echo "$compString" | sed "s/$componentNumber/$componentComposition/")
+        else
+            compString=$(echo "$compString" | sed "s/$componentNumber/$componentChar/")
+        fi
+    done
+    # If needed, replace components recursively
+    if [[ $compString == *{*}* ]]; then
+        echo $(decode_unencoded_components "$compString" $USE_HAN_PUA)
+    else
+        echo "$compString"
+    fi
+}
+
 get_character_composition_ids () {
     local givenChar=$1
 
@@ -204,13 +242,19 @@ get_character_composition_ids () {
     compositionString=$(echo "$compositionString" | sed "s/\t\*.*//")
     # Remove all the ^ and $ characters
     compositionString=$(echo "$compositionString" | sed 's/[$^]//g')
+    # If there are unencoded components in the composition
+    # string, decode them with the chosen option
+    if [[ $compositionString == *{*}* ]]; then
+        compositionString=$(decode_unencoded_components "$compositionString" $USE_UNENCODED_CHARS)
+    fi
+
     # Create an array with each of the available composition options
     local compositionOptions=()
     read -a compositionOptions <<< "$compositionString"
-    # Remove composition options with unrepresentable components, unencoded components, or not
-    # wished IDCs, i.e. composition options that have any of the follow characters: ？{}〾㇯⿾⿿
+    # Remove composition options with unrepresentable components or unwished IDCs,
+    # i.e. composition options that have any of the follow characters: ？〾㇯⿾⿿
     for idx in "${!compositionOptions[@]}"; do
-        if [[ -n $(echo "${compositionOptions[idx]}" | sed -n '/[？{}〾㇯⿾⿿]/p') ]]; then
+        if [[ -n $(echo "${compositionOptions[idx]}" | sed -n '/[？〾㇯⿾⿿]/p') ]]; then
             unset "compositionOptions[$idx]"
         fi
     done

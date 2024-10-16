@@ -1,0 +1,3 @@
+[submodule "IDS"]
+	path = IDS
+	url = https://github.com/omulh/IDS.git
