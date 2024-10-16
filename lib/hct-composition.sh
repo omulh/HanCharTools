@@ -191,13 +191,22 @@ get_character_composition_wikt () {
 decode_unencoded_components () {
     local compString="$1"
     local USE_HAN_PUA="$2"
+
+    # Extract the unencoded components,
+    # i.e. components represented by {0-9}
     local unencodedComponents
     unencodedComponents=$(echo "$compString" | sed 's/^[^}]*{/{/')
     unencodedComponents=$(echo "$unencodedComponents" | sed 's/}[^{]*{/} {/g')
     unencodedComponents=$(echo "$unencodedComponents" | sed 's/}[^{]*$/}/')
+
+    # For every extracted component
     for componentNumber in $unencodedComponents; do
+        # Get the corresponding character
+        # (only valid when using the BabelStone Han PUA font)
         local componentChar
         componentChar=$(grep -m1 "#.$componentNumber" "$IDS_FILE" | sed 's/.*\(.\)$/\1/')
+        # Replace the component by its sub-composition or
+        # by its character, depending on the passed option
         if [[ $USE_HAN_PUA == false ]]; then
             local componentComposition
             componentComposition=$(grep -P "\t$componentChar\t" "$IDS_FILE" | sed 's/.*^//; s/$.*//')
@@ -206,6 +215,7 @@ decode_unencoded_components () {
             compString=$(echo "$compString" | sed "s/$componentNumber/$componentChar/")
         fi
     done
+    # If needed, replace components recursively
     if [[ $compString == *{*}* ]]; then
         echo $(decode_unencoded_components "$compString" $USE_HAN_PUA)
     else
@@ -230,8 +240,8 @@ get_character_composition_ids () {
     compositionString=$(echo "$compositionString" | sed "s/\t\*.*//")
     # Remove all the ^ and $ characters
     compositionString=$(echo "$compositionString" | sed 's/[$^]//g')
-    # If there are unencoded components, i.e. {0-9} components, replace them with
-    # their corresponding character (only valid with the BabelStone Han PUA font)
+    # If there are unencoded components in the composition
+    # string, decode them with the chosen option
     if [[ $compositionString == *{*}* ]]; then
         compositionString=$(decode_unencoded_components "$compositionString" $USE_UNENCODED_CHARS)
     fi
