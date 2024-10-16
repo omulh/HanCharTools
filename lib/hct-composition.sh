@@ -63,7 +63,7 @@ if [[ -n $HCT_SOURCE_LETTERS && -z $(echo "$HCT_SOURCE_LETTERS" | sed 's/[GHMTJK
 fi
 
 # Parse the command line arguments
-GIVEN_ARGS=$(getopt -n hct-$progName -o qs:wVh -l "quiet,source:,wiktionary,version,help" -- "$@")
+GIVEN_ARGS=$(getopt -n hct-$progName -o qs:uwVh -l "quiet,source:,unencoded,wiktionary,version,help" -- "$@")
 
 # Deal with invalid command line arguments
 if [ $? != 0 ]; then
@@ -79,6 +79,8 @@ while true; do
             QUIET=true; shift ;;
         -s | --source )
             SOURCE_LETTERS="$2"; shift 2 ;;
+        -u | --unencoded )
+            USE_UNENCODED_CHARS=true; shift ;;
         -w | --wiktionary )
             USE_WIKTIONARY=true; shift ;;
         -V | --version )
