@@ -56,6 +56,7 @@ readonly IDS_FILE="$SOURCE_DIR/../IDS/IDS.TXT"
 QUIET=false
 USE_WIKTIONARY=false
 USE_UNENCODED_CHARS=false
+VERBOSE=false
 
 # Process the environment variables
 if [[ -n $HCT_SOURCE_LETTERS && -z $(echo "$HCT_SOURCE_LETTERS" | sed 's/[GHMTJKPVUSBXYZ]//g') ]]; then
@@ -63,7 +64,7 @@ if [[ -n $HCT_SOURCE_LETTERS && -z $(echo "$HCT_SOURCE_LETTERS" | sed 's/[GHMTJK
 fi
 
 # Parse the command line arguments
-GIVEN_ARGS=$(getopt -n hct-$progName -o qs:uwVh -l "quiet,source:,unencoded,wiktionary,version,help" -- "$@")
+GIVEN_ARGS=$(getopt -n hct-$progName -o qs:uwvVh -l "quiet,source:,unencoded,wiktionary,verbose,version,help" -- "$@")
 
 # Deal with invalid command line arguments
 if [ $? != 0 ]; then
@@ -83,6 +84,8 @@ while true; do
             USE_UNENCODED_CHARS=true; shift ;;
         -w | --wiktionary )
             USE_WIKTIONARY=true; shift ;;
+        -v | --verbose )
+            VERBOSE=true; shift ;;
         -V | --version )
             echo "hct $progVersion"; exit 0 ;;
         -h | --help )
@@ -193,6 +196,20 @@ get_character_composition_wikt () {
 decode_unencoded_components () {
     local compString="$1"
     local USE_HAN_PUA="$2"
+    local nestLevel=1
+
+    if [[ -z $3 ]]; then
+        if [[ $VERBOSE == true ]]; then
+            echo -n "$givenChar <- $compString <- " >&2
+            if [[ $USE_HAN_PUA == true ]]; then
+                echo "Using Han PUA chars. to replace unencoded components" >&2
+            else
+                echo "Using subcompositions to replace unencoded components" >&2
+            fi
+        fi
+    else
+        nestLevel=$3
+    fi
 
     # Extract the unencoded components,
     # i.e. components represented by {0-9}
@@ -214,6 +231,11 @@ decode_unencoded_components () {
             local componentComposition
             componentComposition=$(grep -P "\t$componentChar\t" "$IDS_FILE" | sed 's/.*^//; s/$.*//')
 
+            if [[ $VERBOSE == true ]]; then
+                for _ in $(seq $((nestLevel*4))); do echo -n ' ' >&2; done
+                echo "$componentNumber -> $componentComposition" >&2
+            fi
+
             # If the unencoded component's composition contains
             # itself unencoded components, recurse the function
             if [[ $componentComposition == *{*}* ]]; then
@@ -223,6 +245,11 @@ decode_unencoded_components () {
             # Replace the unencoded component by its sub-composition
             compString=$(echo "$compString" | sed "s/$componentNumber/$componentComposition/")
         else
+            if [[ $VERBOSE == true ]]; then
+                for _ in $(seq $((nestLevel*4))); do echo -n ' ' >&2; done
+                echo "$componentNumber -> $componentChar" >&2
+            fi
+
             # Replace the unencoded component by its 'encoded' char.
             compString=$(echo "$compString" | sed "s/$componentNumber/$componentChar/")
         fi
