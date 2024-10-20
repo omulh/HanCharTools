@@ -27,8 +27,18 @@ Options:
                     specified source letter(s); see below to see the source options;
                     this option is ignored when using the --wiktionary option
 
+  -u, --unencoded   when encountering unencoded components, make use of the
+                    corresponding characters from the Han PUA font instead
+                    of using the components' sub-composition
+
   -w, --wiktionary  retrieve the composition information from Wiktionary
                     instead of the default local IDS database
+
+  -v, --verbose     print verbose messages to the stderr stream; when this option
+                    is used, the --no-progress option is implicitly enabled
+
+      --no-progress suppress the progress status from the stderr stream;
+                    this option has no effect when the input is a single character
 
   -V, --version     show version information and exit
   -h, --help        show this help message and exit
