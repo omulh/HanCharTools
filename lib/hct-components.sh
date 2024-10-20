@@ -39,6 +39,11 @@ Options:
                     l -> length, use the shortest available option
                     the default value for this option is 'f'
 
+  -u, --unencoded   make use of the unencoded characters from the Han PUA font;
+                    this option is directly passed to the 'composition' hct command,
+                    which is used to get the composition of a given character; refer
+                    to that command's help text for more information on this option
+
   -v, --verbose     print verbose messages to the stderr stream; when this option
                     is used, the --no-progress option is implicitly enabled
 
