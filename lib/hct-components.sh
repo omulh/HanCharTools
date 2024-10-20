@@ -393,7 +393,9 @@ else
     fi
     while read testedChar; do
         ((processCount++))
-        echo -ne "\r\033[0KProcessing line $processCount/$lineCount" >&2
+        if [[ $SHOW_PROGRESS == true ]]; then
+            echo -ne "\r\033[0KProcessing line $processCount/$lineCount" >&2
+        fi
         components=$(get_character_components "$testedChar")
         exitCode=$?
         if [ $exitCode == 0 ]; then
@@ -404,6 +406,8 @@ else
             echo -e "$testedChar\t$exitCode"
         fi
     done < <(echo "$INPUT")
-    echo -e "\r\033[0KProcessing done" >&2
+    if [[ $SHOW_PROGRESS == true ]]; then
+        echo -e "\r\033[0KProcessing done" >&2
+    fi
     exit 0
 fi
