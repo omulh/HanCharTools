@@ -13,7 +13,7 @@ hct\-composition \- get the composition of Han characters, aka Chinese character
 .RB [ \-\-version ]
 .br
 .B hct composition
-.RB [ \-qw ]
+.RB [ \-quvw ]
 .RB [ \-s
 .IR SOURCE_LETTERS ]
 .I INPUT
@@ -148,6 +148,38 @@ argument, which must contain one or more letters out of
 This option is ignored when using the
 .B --wiktionary
 option.
+.TP
+.BR \-u , \ \-\-unencoded
+When encountering unencoded components in a composition, make use
+of the corresponding characters from the Han PUA font instead of
+using the components' sub-composition.
+.IP
+Unencoded components are ideographs which are not part of the
+Unicode standard.
+In the local IDS database, these are represented by a number between
+curly braces, e.g., {50}.
+Unencoded components can be replaced with a corresponding sub\-composition,
+which makes use of encoded components only, but may be an approximation.
+The BableStone Han PUA font, however, contains a representation of the
+unencoded components as individual characters.
+.IP
+The BabelStone Han PUA font must be installed in the system for this
+option to work as expected.
+.br
+.TP
+.BR \-v , \ \-\-verbose
+Print verbose messages to the stderr stream.
+.br
+Verbose messages show when 'decoding' unencoded components.
+.IP
+When this option is used, the
+.B \-\-no\-progress
+option is implicitly enabled.
+.TP
+.B \-\-no\-progress
+Suppress the progress status from the stderr stream.
+.br
+This option has no effect when the input is a single character.
 .TP
 .BR \-w , \ \-\-wiktionary
 Retrieve the composition information from Wiktionary instead of the default
