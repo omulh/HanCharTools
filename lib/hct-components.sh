@@ -54,6 +54,7 @@ readonly IDS_FILE="$SOURCE_DIR/../IDS/IDS.TXT"
 QUIET=false
 SHOW_PROGRESS=true
 TIEBREAKER_RULE='f'
+UNENCODED_OPT=''
 VERBOSE=false
 
 # Process the environment variables
@@ -66,7 +67,7 @@ if [[ -n $HCT_COMPONENTS_FILE && -e $HCT_COMPONENTS_FILE ]]; then
 fi
 
 # Parse the command line arguments
-GIVEN_ARGS=$(getopt -n hct-$progName -o c:qs:t:v''Vh -l "components:,quiet,source:,tiebreaker:,verbose,no-progress,version,help" -- "$@")
+GIVEN_ARGS=$(getopt -n hct-$progName -o c:qs:t:uv''Vh -l "components:,quiet,source:,tiebreaker:,unencoded,verbose,no-progress,version,help" -- "$@")
 
 # Deal with invalid command line arguments
 if [ $? != 0 ]; then
@@ -86,6 +87,8 @@ while true; do
             SOURCE_LETTERS="$2"; shift 2 ;;
         -t | --tiebreaker )
             TIEBREAKER_RULE="$2"; shift 2 ;;
+        -u | --unencoded )
+            UNENCODED_OPT="--unencoded"; shift ;;
         -v | --verbose )
             VERBOSE=true;
             SHOW_PROGRESS=false;
@@ -218,9 +221,9 @@ get_character_components () {
     local compositionString
     local errCode
     if [[ -z $SOURCE_LETTERS ]]; then
-        compositionString=$("$SOURCE_DIR/hct-composition.sh" -q "$givenChar")
+        compositionString=$("$SOURCE_DIR/hct-composition.sh" -q "$UNENCODED_OPT" "$givenChar")
     else
-        compositionString=$("$SOURCE_DIR/hct-composition.sh" -q -s "$SOURCE_LETTERS" "$givenChar")
+        compositionString=$("$SOURCE_DIR/hct-composition.sh" -q -s "$SOURCE_LETTERS" "$UNENCODED_OPT" "$givenChar")
     fi
     errCode=$?
     if [[ $errCode != 0 ]]; then
