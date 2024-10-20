@@ -203,26 +203,32 @@ decode_unencoded_components () {
 
     # For every extracted component
     for componentNumber in $unencodedComponents; do
-        # Get the corresponding character
+        # Get the corresponding 'encoded' character
         # (only valid when using the BabelStone Han PUA font)
         local componentChar
         componentChar=$(grep -m1 "#.$componentNumber" "$IDS_FILE" | sed 's/.*\(.\)$/\1/')
-        # Replace the component by its sub-composition or
-        # by its character, depending on the passed option
+
+        # Depending on the passed option
         if [[ $USE_HAN_PUA == false ]]; then
+            # Find the component's sub-composition
             local componentComposition
             componentComposition=$(grep -P "\t$componentChar\t" "$IDS_FILE" | sed 's/.*^//; s/$.*//')
+
+            # If the unencoded component's composition contains
+            # itself unencoded components, recurse the function
+            if [[ $componentComposition == *{*}* ]]; then
+                componentComposition=$(decode_unencoded_components "$componentComposition" $USE_HAN_PUA $((++nestLevel)))
+            fi
+
+            # Replace the unencoded component by its sub-composition
             compString=$(echo "$compString" | sed "s/$componentNumber/$componentComposition/")
         else
+            # Replace the unencoded component by its 'encoded' char.
             compString=$(echo "$compString" | sed "s/$componentNumber/$componentChar/")
         fi
     done
-    # If needed, replace components recursively
-    if [[ $compString == *{*}* ]]; then
-        echo $(decode_unencoded_components "$compString" $USE_HAN_PUA)
-    else
-        echo "$compString"
-    fi
+
+    echo "$compString"
 }
 
 get_character_composition_ids () {
