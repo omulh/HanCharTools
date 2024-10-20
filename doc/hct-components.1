@@ -13,7 +13,7 @@ hct\-components \- decompose Han characters, aka Chinese characters, into their 
 .RB [ \-\-version ]
 .br
 .B hct components
-.RB [ \-qv ]
+.RB [ \-quv ]
 .RB [ \-c
 .IR COMPONENTS_FILE ]
 .RB [ \-s
@@ -182,6 +182,33 @@ letter corresponds to the following:
 -> length, choose the shortest available components option
 .IP
 When this option is not specified, the 'first' rule is used.
+.TP
+.BR \-u , \ \-\-unencoded
+When encountering unencoded components while retrieving the composition
+of a given character, make use of the corresponding characters from
+the Han PUA font instead of using the components' sub-composition.
+.IP
+Unencoded components are ideographs which are not part of the
+Unicode standard.
+In the local IDS database, these are represented by a number between
+curly braces, e.g., {50}.
+Unencoded components can be replaced with a corresponding sub\-composition,
+which makes use of encoded components only, but may be an approximation.
+The BableStone Han PUA font, however, contains a representation of the
+unencoded components as individual characters.
+.IP
+The BabelStone Han PUA font must be installed in the system for this
+option to work as expected.
+Additionally, using this option only makes sense when at least
+one Han PUA character is used in a
+.I COMPONENTS_FILE
+that is passed to the
+.B \-\-components
+option.
+.IP
+To better understand this option, see the
+.B hct-composition(1)
+command and its identically named option.
 .TP
 .BR \-v , \ \-\-verbose
 Print verbose messages to the stderr stream.
