@@ -54,6 +54,7 @@ readonly SOURCE_DIR=$(dirname -- "$(readlink -f "$0")")
 readonly IDS_FILE="$SOURCE_DIR/../IDS/IDS.TXT"
 
 QUIET=false
+SHOW_PROGRESS=true
 USE_WIKTIONARY=false
 USE_UNENCODED_CHARS=false
 VERBOSE=false
@@ -64,7 +65,7 @@ if [[ -n $HCT_SOURCE_LETTERS && -z $(echo "$HCT_SOURCE_LETTERS" | sed 's/[GHMTJK
 fi
 
 # Parse the command line arguments
-GIVEN_ARGS=$(getopt -n hct-$progName -o qs:uwvVh -l "quiet,source:,unencoded,wiktionary,verbose,version,help" -- "$@")
+GIVEN_ARGS=$(getopt -n hct-$progName -o qs:uwv''Vh -l "quiet,source:,unencoded,wiktionary,verbose,no-progress,version,help" -- "$@")
 
 # Deal with invalid command line arguments
 if [ $? != 0 ]; then
@@ -85,7 +86,11 @@ while true; do
         -w | --wiktionary )
             USE_WIKTIONARY=true; shift ;;
         -v | --verbose )
-            VERBOSE=true; shift ;;
+            VERBOSE=true;
+            SHOW_PROGRESS=false;
+            shift ;;
+        --no-progress )
+            SHOW_PROGRESS=false; shift ;;
         -V | --version )
             echo "hct $progVersion"; exit 0 ;;
         -h | --help )
@@ -327,7 +332,9 @@ if [[ -e $INPUT ]]; then
     fi
     while read testedChar; do
         ((processCount++))
-        echo -ne "\r\033[0KProcessing line $processCount/$lineCount" >&2
+        if [[ $SHOW_PROGRESS == true ]]; then
+            echo -ne "\r\033[0KProcessing line $processCount/$lineCount" >&2
+        fi
         if [[ $USE_WIKTIONARY == true ]]; then
             composition=$(get_character_composition_wikt "$testedChar")
         else
@@ -342,7 +349,9 @@ if [[ -e $INPUT ]]; then
             echo -e "$testedChar\t$exitCode"
         fi
     done < "$INPUT"
-    echo -e "\r\033[0KProcessing done" >&2
+    if [[ $SHOW_PROGRESS == true ]]; then
+        echo -e "\r\033[0KProcessing done" >&2
+    fi
     exit 0
 # If input is a single character
 elif [[ ${#INPUT} == 1 ]]; then
@@ -386,7 +395,9 @@ else
     fi
     while read testedChar; do
         ((processCount++))
-        echo -ne "\r\033[0KProcessing line $processCount/$lineCount" >&2
+        if [[ $SHOW_PROGRESS == true ]]; then
+            echo -ne "\r\033[0KProcessing line $processCount/$lineCount" >&2
+        fi
         if [[ $USE_WIKTIONARY == true ]]; then
             composition=$(get_character_composition_wikt "$testedChar")
         else
@@ -401,6 +412,8 @@ else
             echo -e "$testedChar\t$exitCode"
         fi
     done < <(echo "$INPUT")
-    echo -e "\r\033[0KProcessing done" >&2
+    if [[ $SHOW_PROGRESS == true ]]; then
+        echo -e "\r\033[0KProcessing done" >&2
+    fi
     exit 0
 fi
