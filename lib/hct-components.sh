@@ -59,7 +59,7 @@ readonly IDS_FILE="$SOURCE_DIR/../IDS/IDS.TXT"
 QUIET=false
 SHOW_PROGRESS=true
 TIEBREAKER_RULE='f'
-UNENCODED_OPT=''
+USE_UNENCODED_CHARS=false
 VERBOSE=false
 
 # Process the environment variables
@@ -93,7 +93,7 @@ while true; do
         -t | --tiebreaker )
             TIEBREAKER_RULE="$2"; shift 2 ;;
         -u | --unencoded )
-            UNENCODED_OPT="--unencoded"; shift ;;
+            USE_UNENCODED_CHARS=true; shift ;;
         -v | --verbose )
             VERBOSE=true;
             SHOW_PROGRESS=false;
@@ -226,9 +226,17 @@ get_character_components () {
     local compositionString
     local errCode
     if [[ -z $SOURCE_LETTERS ]]; then
-        compositionString=$("$SOURCE_DIR/hct-composition.sh" -q "$UNENCODED_OPT" "$givenChar")
+        if [[ $USE_UNENCODED_CHARS == false ]]; then
+            compositionString=$("$SOURCE_DIR/hct-composition.sh" -q "$givenChar")
+        else
+            compositionString=$("$SOURCE_DIR/hct-composition.sh" -qu "$givenChar")
+        fi
     else
-        compositionString=$("$SOURCE_DIR/hct-composition.sh" -q -s "$SOURCE_LETTERS" "$UNENCODED_OPT" "$givenChar")
+        if [[ $USE_UNENCODED_CHARS == false ]]; then
+            compositionString=$("$SOURCE_DIR/hct-composition.sh" -q -s "$SOURCE_LETTERS" "$givenChar")
+        else
+            compositionString=$("$SOURCE_DIR/hct-composition.sh" -qu -s "$SOURCE_LETTERS" "$givenChar")
+        fi
     fi
     errCode=$?
     if [[ $errCode != 0 ]]; then
