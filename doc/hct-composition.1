@@ -197,21 +197,27 @@ Show the help message and exit.
 .
 .SH ENVIRONMENT
 .B hct\-composition
-checks for one environment variable on every execution of the command.
+checks for some environment variables on every execution of the command.
 .br
-Environment variables are specially useful to avoid giving arguments
-for a specific option which will be used repeatedly.
-.PP
-Set the value of the variable
+Environment variables are specially useful to avoid giving a command
+line option that will be used repeatedly.
+.TP
 .B HCT_SOURCE_LETTERS
-to implicitly specify an argument for the
+Set the value of this variable to implicitly give an argument for the
 .B \-\-source
 option.
-.PP
-The environment variable's value can be overwritten by specifying
-an argument for the corresponding command line option.
-Environment variables are ignored silently if they do not contain
-a valid argument for the corresponding option.
+.br
+The variable's value can be overridden by specifying a different argument
+for the corresponding command line option.
+.br
+The variable is ignored silently if it does not contain a valid argument
+for the corresponding option.
+.TP
+.B HCT_USE_UNENCODED_CHARS
+Set the value of this variable to anything except an empty string to
+implicitly use the
+.B \-\-unencoded
+option.
 .
 .SH EXIT STATUS
 .TP
