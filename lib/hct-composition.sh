@@ -74,6 +74,10 @@ if [[ -n $HCT_SOURCE_LETTERS && -z $(echo "$HCT_SOURCE_LETTERS" | sed 's/[GHMTJK
     SOURCE_LETTERS="$HCT_SOURCE_LETTERS"
 fi
 
+if [[ -n $HCT_USE_UNENCODED_CHARS ]]; then
+    USE_UNENCODED_CHARS=true
+fi
+
 # Parse the command line arguments
 GIVEN_ARGS=$(getopt -n hct-$progName -o qs:uwv''Vh -l "quiet,source:,unencoded,wiktionary,verbose,no-progress,version,help" -- "$@")
 

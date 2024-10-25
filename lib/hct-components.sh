@@ -71,6 +71,10 @@ if [[ -n $HCT_COMPONENTS_FILE && -e $HCT_COMPONENTS_FILE ]]; then
     COMPONENTS_FILE="$HCT_COMPONENTS_FILE"
 fi
 
+if [[ -n $HCT_USE_UNENCODED_CHARS ]]; then
+    USE_UNENCODED_CHARS=true
+fi
+
 # Parse the command line arguments
 GIVEN_ARGS=$(getopt -n hct-$progName -o c:qs:t:uv''Vh -l "components:,quiet,source:,tiebreaker:,unencoded,verbose,no-progress,version,help" -- "$@")
 
